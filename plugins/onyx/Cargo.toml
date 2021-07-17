@@ -1,0 +1,11 @@
+[package]
+name = "onyx"
+version = "0.1.0"
+authors = ["Banned Patriot <realbannedpatriot@protonmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+core = { path = "../../core" }

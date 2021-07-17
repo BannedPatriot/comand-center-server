@@ -2,7 +2,7 @@ struct LanBox;
 const PLUGIN_NAME: &str = "LanBox";
 
 impl core::Plugin for LanBox {
-    fn get_info(&self) {
+    fn init(&self) {
         println!("Loaded: {} Plugin", PLUGIN_NAME);
     }
 }

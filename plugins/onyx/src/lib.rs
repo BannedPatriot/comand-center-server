@@ -2,7 +2,7 @@ struct Onyx;
 const PLUGIN_NAME: &str = "Onyx";
 
 impl core::Plugin for Onyx {
-    fn get_info(&self) {
+    fn init(&self) {
         println!("Loaded: {} Plugin", PLUGIN_NAME);
     }
 }

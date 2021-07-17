@@ -2,7 +2,7 @@ struct Vmix;
 const PLUGIN_NAME: &str = "vMix";
 
 impl core::Plugin for Vmix {
-    fn get_info(&self) {
+    fn init(&self) {
         println!("Loaded: {} Plugin", PLUGIN_NAME);
     }
 }

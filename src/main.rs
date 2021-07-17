@@ -16,9 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+
 use libloading::Library;
 use core::{Plugin, PluginRegistrar};
 use std::env;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
+
+use serde_json::{Value};
+use serde_json::json;
+use std::vec::Vec;
 
 struct Registrar {
     plugins: Vec<Box<dyn Plugin>>,
@@ -42,7 +52,7 @@ fn main() {
     #[cfg(not(debug_assertions))]
     let plugin_path = format!("{}/plugins", cwd);
 
-    println!("Searching for Plugins in: {}", plugin_path);
+    println!("# Scanning for Plugins in: {}", plugin_path);
 
     let paths = std::fs::read_dir(plugin_path).unwrap();
         
@@ -68,7 +78,30 @@ fn main() {
         
     }
 
+    println!("# Loading Plugins\n");
+    let mut not_first = false;
     for plugin in registrar.plugins {
-        plugin.get_info();
+        if not_first {
+            println!("");
+        }
+        
+        plugin.init();
+
+        println!("\n  Events:");
+        for event in plugin.get_events() {
+            println!("    {}", event.name);
+            for var in event.vars {
+                println!("      --> {} [{}]", var.var_name, var.var_type);
+            }
+        }
+
+        println!("\n  Triggers:");
+        for trigger in plugin.get_triggers() {
+            println!("    {}", trigger.name);
+            for var in trigger.vars {
+                println!("      --> {} [{}]", var.var_name, var.var_type);
+            }
+        }
+        not_first = true;
     }
 }

@@ -7,6 +7,9 @@ edition = "2018"
 [dependencies]
 core = { path = "core" }
 libloading = "0.5.2"
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
 
 [workspace]
-members = ["plugins/vmix", "plugins/pro-presenter", "plugins/comand-center-control", "plugins/lanbox", "plugins/onyx"]
+members = ["plugins/pro-presenter", "plugins/comand-center-control"]

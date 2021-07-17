@@ -1,5 +1,5 @@
 [package]
-name = "pro-presenter"
+name = "_pro_presenter"
 version = "0.1.0"
 authors = ["Banned Patriot <realbannedpatriot@protonmail.com>"]
 edition = "2018"
@@ -9,3 +9,6 @@ crate-type = ["dylib"]
 
 [dependencies]
 core = { path = "../../core" }
+serde = "*"
+serde_json = "*"
+serde_derive = "*"

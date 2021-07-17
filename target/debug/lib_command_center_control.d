@@ -1,1 +1,0 @@
-/home/dh4/dev/comand-center-server/target/debug/lib_command_center_control.so: /home/dh4/dev/comand-center-server/core/src/lib.rs /home/dh4/dev/comand-center-server/plugins/comand-center-control/src/lib.rs

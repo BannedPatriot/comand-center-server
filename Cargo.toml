@@ -10,6 +10,7 @@ libloading = "0.5.2"
 serde = "*"
 serde_json = "*"
 serde_derive = "*"
+tokio = { version = "1.8.1", features = ["full"] }
 
 [workspace]
-members = ["plugins/pro-presenter", "plugins/comand-center-control"]
+members = ["plugins/comand-center-control", "plugins/pro-presenter"]

@@ -1,10 +1,5 @@
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
 use std::vec::Vec;
-
-use serde_json::{Value};
+use std::sync::mpsc::{Sender};
 
 #[derive(Debug)]
 pub struct Event {
@@ -47,11 +42,11 @@ pub trait Plugin {
     //     comand center through their respective plugins. Plugins handle
     //     the logisticts of opening and mantinaing these connections.
     // */
-    // fn init_endpoint(&self); // bring up an endpoint
-    // fn kill_endpoint(&self); // terminate an endpoint
+    fn init_endpoint(&self, main_tx: Sender<String>) -> Sender<String>; // bring up an endpoint
+    fn kill_endpoint(&self, endpoint: &Sender<String>); // terminate an endpoint
 
     fn get_events(&self) -> Vec<Event>; // get list of possible events to trigger macros
     fn get_triggers(&self) -> Vec<Trigger>; // get list of methords that can be triggered
 
-    // fn trigger(&self); // trigger event on endpoint
+    fn trigger(&self, method: String, vars: String); // trigger event on endpoint
 }

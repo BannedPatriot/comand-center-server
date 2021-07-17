@@ -8,3 +8,4 @@ edition = "2018"
 serde = "*"
 serde_json = "*"
 serde_derive = "*"
+tokio = { version = "1.8.1", features = ["full"] }

@@ -16,18 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 use libloading::Library;
 use core::{Plugin, PluginRegistrar};
 use std::env;
-
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-
-use serde_json::{Value};
-use serde_json::json;
 use std::vec::Vec;
 
 struct Registrar {
@@ -39,7 +30,6 @@ impl PluginRegistrar for Registrar {
         self.plugins.push(plugin);
     }
 }
-
 
 fn main() {
     let mut registrar = Registrar {
@@ -80,7 +70,9 @@ fn main() {
 
     println!("# Loading Plugins\n");
     let mut not_first = false;
-    for plugin in registrar.plugins {
+    let plugins = registrar.plugins;
+
+    for plugin in &plugins {
         if not_first {
             println!("");
         }
@@ -102,6 +94,21 @@ fn main() {
                 println!("      --> {} [{}]", var.var_name, var.var_type);
             }
         }
+
+        plugin.trigger(String::from("clear-all"), String::from("json"));
         not_first = true;
+    }
+
+    let (main_tx, main_rx) = std::sync::mpsc::channel();
+
+    let endpoint_test = plugins[0].init_endpoint(main_tx.clone());
+    
+    loop {
+        let msg = main_rx.try_recv();
+        if !msg.is_err() {
+            // Got msg, do something
+            println!("Log: {}", msg.unwrap());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }

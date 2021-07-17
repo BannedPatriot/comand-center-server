@@ -1,56 +1,14 @@
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-
-use serde_json::json;
-use serde_json::{Value};
 use std::vec::Vec;
 use core::{Event, EventVars, Trigger, TriggerVars};
+use std::sync::mpsc::{Sender, Receiver};
 
 struct ProPresenter;
 
 const PLUGIN_NAME: &str = "Pro Presenter";
 
-// static mut events: serde_json::Value = serde_json::Value::Null;
-// static mut triggers: serde_json::Value = serde_json::Value::Null;
-
 impl core::Plugin for ProPresenter {
     fn init(&self) {
         println!("Loaded: {} Plugin", PLUGIN_NAME);
-
-        // struct Event {
-        //     type: String,
-        //     name: String
-        // }
-        // unsafe {
-        //     events = json!({
-        //         "Slide Changed": [
-        //             {"type": "string", "name": "Current Slide Text"},
-        //             {"type": "string", "name": "Next Slide Text"},
-        //             {"type": "string", "name": "Current Slide Notes"},
-        //             {"type": "string", "name": "Next Slide Notes"}
-        //         ]
-        //     });
-            
-        //     triggers = json!({
-        //         "Trigger Macro": [
-        //             {"type": "string", "name": "Macro Name"}
-        //         ],
-        //         "Trigger Look": [
-        //             {"type": "string", "name": "Look Name"}
-        //         ],
-        //         "Trigger Next Slide": [],
-        //         "Clear All": [],
-        //         "Clear Slide": [],
-        //         "Clear Props": [],
-        //         "Clear Audio": [],
-        //         "Clear Video": [],
-        //         "Clear Telestrator": [],
-        //         "Show Stage Display Message": [{"type": "string", "name": "Message"}],
-        //         "Hide Stage Display Message": []
-        //     });
-        // }
     }
 
     fn get_events(&self) -> Vec<core::Event> {
@@ -109,59 +67,59 @@ impl core::Plugin for ProPresenter {
                 vars: vec![
                     TriggerVars {
                         var_name: String::from("Macro Name"),
-                        var_id: String::from("macro-name"),
+                        var_id: String::from("macro_name"),
                         var_type: String::from("string"),
                     }
                 ]
             },
             Trigger {
                 name: String::from("Next Slide"),
-                id: String::from("next-slide"),
+                id: String::from("next_slide"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Previous Slide"),
-                id: String::from("previous-slide"),
+                id: String::from("previous_slide"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Clear All"),
-                id: String::from("clear-all"),
+                id: String::from("clear_all"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("clear Slide"),
-                id: String::from("clear-slide"),
+                id: String::from("clear_slide"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Clear Props"),
-                id: String::from("clear-props"),
+                id: String::from("clear_props"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Clear Audio"),
-                id: String::from("clear-audio"),
+                id: String::from("clear_audio"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Clear Video"),
-                id: String::from("clear-video"),
+                id: String::from("clear_video"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Clear Telestrator"),
-                id: String::from("clear-telestrator"),
+                id: String::from("clear_telestrator"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("clear Logo"),
-                id: String::from("clear-clogo"),
+                id: String::from("clear_logo"),
                 vars: vec![]
             },
             Trigger {
                 name: String::from("Show Stage Display Message"),
-                id: String::from("show-stage-message"),
+                id: String::from("show_stage_message"),
                 vars: vec![
                     TriggerVars {
                         var_name: String::from("Message"),
@@ -172,7 +130,7 @@ impl core::Plugin for ProPresenter {
             },
             Trigger {
                 name: String::from("Hide Stage Display Message"),
-                id: String::from("hide-stage-message"),
+                id: String::from("hide_stage_message"),
                 vars: vec![]
             }
         ];
@@ -180,6 +138,46 @@ impl core::Plugin for ProPresenter {
         return triggers;
         
     }
+
+
+    fn init_endpoint(&self, main_tx: Sender<String>) -> Sender<String> {
+        let mut message: String = "".to_owned();
+            message = message + PLUGIN_NAME;
+            message = message + ": Endpoint Opened";
+            main_tx.send(String::from(message));
+
+        let (thread_tx, thread_rx) = std::sync::mpsc::channel();
+
+        std::thread::spawn(move || {
+            let mut running = true;
+            while running {
+                let msg = thread_rx.try_recv();
+                if msg.is_ok() {
+                    let msg = msg.unwrap();
+                    if msg == String::from("_term_") {
+                        running = false;
+                    }
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            let mut message: String = "".to_owned();
+            message = message + PLUGIN_NAME;
+            message = message + ": Endpoint Closed";
+            main_tx.send(String::from(message));
+        });
+
+        return thread_tx;
+    }
+
+    fn kill_endpoint(&self, endpoint: &Sender<String>) {
+        endpoint.send(String::from("_term_"));
+    }
+
+    fn trigger(&self, method: String, vars: String) {
+        // todo
+    }
+
+
 
 }
 

@@ -15,39 +15,39 @@ impl core::Plugin for ProPresenter {
 
         let events: Vec<Event> = vec![
             Event {
-                name: String::from("Slide Changed"),
-                id: String::from("slide-changed"),
+                name: "Slide Changed",
+                id: "slide-changed",
                 vars: vec![
                     EventVars {
-                        var_name: String::from("Current Slide Text"),
-                        var_id: String::from("current-slide-text"),
-                        var_type: String::from("string"),
+                        var_name: "Current Slide Text",
+                        var_id: "current-slide-text",
+                        var_type: "string",
                     },
                     EventVars {
-                        var_name: String::from("Next Slide Text"),
-                        var_id: String::from("next-slide-text"),
-                        var_type: String::from("string"),
+                        var_name: "Next Slide Text",
+                        var_id: "next-slide-text",
+                        var_type: "string",
                     },
                     EventVars {
-                        var_name: String::from("Current Slide Notes"),
-                        var_id: String::from("current-slide-notes"),
-                        var_type: String::from("string"),
+                        var_name: "Current Slide Notes",
+                        var_id: "current-slide-notes",
+                        var_type: "string",
                     },
                     EventVars {
-                        var_name: String::from("Next Slide Notes"),
-                        var_id: String::from("next-slide-notes"),
-                        var_type: String::from("string"),
+                        var_name: "Next Slide Notes",
+                        var_id: "next-slide-notes",
+                        var_type: "string",
                     }
                 ]
             },
             Event {
-                name: String::from("Stage Display Layout Changed"),
-                id: String::from("stage-layout-changed"),
+                name: "Stage Display Layout Changed",
+                id: "stage-layout-changed",
                 vars: vec![
                     EventVars {
-                        var_name: String::from("name"),
-                        var_id: String::from("id"),
-                        var_type: String::from("type"),
+                        var_name: "name",
+                        var_id: "id",
+                        var_type: "type",
                     }
                 ]
             }
@@ -62,75 +62,75 @@ impl core::Plugin for ProPresenter {
 
         let triggers: Vec<Trigger> = vec![
             Trigger {
-                name: String::from("Macro"),
-                id: String::from("macro"),
+                name: "Macro",
+                id: "macro",
                 vars: vec![
                     TriggerVars {
-                        var_name: String::from("Macro Name"),
-                        var_id: String::from("macro_name"),
-                        var_type: String::from("string"),
+                        var_name: "Macro Name",
+                        var_id: "macro_name",
+                        var_type: "string",
                     }
                 ]
             },
             Trigger {
-                name: String::from("Next Slide"),
-                id: String::from("next_slide"),
+                name: "Next Slide",
+                id: "next_slide",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Previous Slide"),
-                id: String::from("previous_slide"),
+                name: "Previous Slide",
+                id: "previous_slide",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Clear All"),
-                id: String::from("clear_all"),
+                name: "Clear All",
+                id: "clear_all",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("clear Slide"),
-                id: String::from("clear_slide"),
+                name: "clear Slide",
+                id: "clear_slide",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Clear Props"),
-                id: String::from("clear_props"),
+                name: "Clear Props",
+                id: "clear_props",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Clear Audio"),
-                id: String::from("clear_audio"),
+                name: "Clear Audio",
+                id: "clear_audio",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Clear Video"),
-                id: String::from("clear_video"),
+                name: "Clear Video",
+                id: "clear_video",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Clear Telestrator"),
-                id: String::from("clear_telestrator"),
+                name: "Clear Telestrator",
+                id: "clear_telestrator",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("clear Logo"),
-                id: String::from("clear_logo"),
+                name: "clear Logo",
+                id: "clear_logo",
                 vars: vec![]
             },
             Trigger {
-                name: String::from("Show Stage Display Message"),
-                id: String::from("show_stage_message"),
+                name: "Show Stage Display Message",
+                id: "show_stage_message",
                 vars: vec![
                     TriggerVars {
-                        var_name: String::from("Message"),
-                        var_id: String::from("message"),
-                        var_type: String::from("string"),
+                        var_name: "Message",
+                        var_id: "message",
+                        var_type: "string",
                     }
                 ]
             },
             Trigger {
-                name: String::from("Hide Stage Display Message"),
-                id: String::from("hide_stage_message"),
+                name: "Hide Stage Display Message",
+                id: "hide_stage_message",
                 vars: vec![]
             }
         ];
@@ -141,10 +141,7 @@ impl core::Plugin for ProPresenter {
 
 
     fn init_endpoint(&self, main_tx: Sender<String>) -> Sender<String> {
-        let mut message: String = "".to_owned();
-            message = message + PLUGIN_NAME;
-            message = message + ": Endpoint Opened";
-            main_tx.send(String::from(message));
+        main_tx.send(format!("{} - Endpoint Opened", PLUGIN_NAME));
 
         let (thread_tx, thread_rx) = std::sync::mpsc::channel();
 
@@ -160,10 +157,7 @@ impl core::Plugin for ProPresenter {
                 }
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
-            let mut message: String = "".to_owned();
-            message = message + PLUGIN_NAME;
-            message = message + ": Endpoint Closed";
-            main_tx.send(String::from(message));
+            main_tx.send(format!("{} - Endpoint Closed", PLUGIN_NAME));
         });
 
         return thread_tx;
@@ -173,7 +167,7 @@ impl core::Plugin for ProPresenter {
         endpoint.send(String::from("_term_"));
     }
 
-    fn trigger(&self, method: String, vars: String) {
+    fn trigger(&self, method: &str, vars: String) {
         // todo
     }
 

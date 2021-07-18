@@ -16,19 +16,20 @@ impl core::Plugin for ComandCenterControl {
 
         let events: Vec<Event> = vec![
             Event {
-                name: String::from("Key Pressed"),
-                id: String::from("key-pressed"),
+                name: "Key Pressed",
+                id: "key-pressed",
                 vars: vec![
                     EventVars {
-                        var_name: String::from("Key Identifier"),
-                        var_id: String::from("key-identifier"),
-                        var_type: String::from("string"),
+                        var_name: "Key Identifier",
+                        var_id: "key-identifier",
+                        var_type: "string",
                     }
                 ]
             }
         ];
 
         return events;
+        
         
     }
 
@@ -37,8 +38,8 @@ impl core::Plugin for ComandCenterControl {
 
         let triggers: Vec<Trigger> = vec![
             Trigger {
-                name: String::from(""),
-                id: String::from(""),
+                name: "",
+                id: "",
                 vars: vec![]
             }
         ];
@@ -48,10 +49,7 @@ impl core::Plugin for ComandCenterControl {
     }
 
     fn init_endpoint(&self, main_tx: Sender<String>) -> Sender<String> {
-        let mut message: String = "".to_owned();
-            message = message + PLUGIN_NAME;
-            message = message + ": Endpoint Opened";
-            main_tx.send(String::from(message));
+        main_tx.send(format!("{} - Endpoint Opened", PLUGIN_NAME));
 
         let (thread_tx, thread_rx) = std::sync::mpsc::channel();
 
@@ -67,10 +65,7 @@ impl core::Plugin for ComandCenterControl {
                 }
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
-            let mut message: String = "".to_owned();
-            message = message + PLUGIN_NAME;
-            message = message + ": Endpoint Closed";
-            main_tx.send(String::from(message));
+            main_tx.send(format!("{} - Endpoint Closed", PLUGIN_NAME));
         });
 
         return thread_tx;
@@ -80,7 +75,7 @@ impl core::Plugin for ComandCenterControl {
         endpoint.send(String::from("_term_"));
     }
 
-    fn trigger(&self, method: String, vars: String) {
+    fn trigger(&self, method: &str, vars: String) {
         // todo
     }
 }

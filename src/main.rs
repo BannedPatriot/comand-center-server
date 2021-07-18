@@ -95,7 +95,7 @@ fn main() {
             }
         }
 
-        plugin.trigger(String::from("clear-all"), String::from("json"));
+        plugin.trigger("clear-all", String::from("json"));
         not_first = true;
     }
 

@@ -3,30 +3,30 @@ use std::sync::mpsc::{Sender};
 
 #[derive(Debug)]
 pub struct Event {
-    pub name: String,
-    pub id: String,
+    pub name: &'static str,
+    pub id: &'static str,
     pub vars: Vec<EventVars>
 }
 
 #[derive(Debug)]
 pub struct EventVars {
-    pub var_name: String,
-    pub var_id: String,
-    pub var_type: String
+    pub var_name: &'static str,
+    pub var_id: &'static str,
+    pub var_type: &'static str
 }
 
 #[derive(Debug)]
 pub struct Trigger {
-    pub name: String,
-    pub id: String,
+    pub name: &'static str,
+    pub id: &'static str,
     pub vars: Vec<TriggerVars>
 }
 
 #[derive(Debug)]
 pub struct TriggerVars {
-    pub var_name: String,
-    pub var_id: String,
-    pub var_type: String
+    pub var_name: &'static str,
+    pub var_id: &'static str,
+    pub var_type: &'static str
 }
 
 pub trait PluginRegistrar {
@@ -48,5 +48,5 @@ pub trait Plugin {
     fn get_events(&self) -> Vec<Event>; // get list of possible events to trigger macros
     fn get_triggers(&self) -> Vec<Trigger>; // get list of methords that can be triggered
 
-    fn trigger(&self, method: String, vars: String); // trigger event on endpoint
+    fn trigger(&self, method: &str, vars: String); // trigger event on endpoint
 }

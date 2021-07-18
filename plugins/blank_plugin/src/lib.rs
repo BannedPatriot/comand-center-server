@@ -4,7 +4,7 @@ use std::sync::mpsc::{Sender, Receiver};
 
 struct ComandCenterControl;
 
-const PLUGIN_NAME: &str = "Onyx";
+const PLUGIN_NAME: &str = "Blank Plugin";
 
 impl core::Plugin for ComandCenterControl {
     fn init(&self) {

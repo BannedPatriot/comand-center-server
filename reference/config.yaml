@@ -1,8 +1,12 @@
 # Configure Endpoints
 endpoints:
-- name: iMac PP7
-  plugin: pro-presenter
+- name Example Endpoint
+  plugin: example-plugin
   enabled: true
+
+- name: iMac PP7
+  Plugin: pro-presenter
+  enabled: false
   options:
   - option: Version
     value: Pro Presenter 7
@@ -21,7 +25,7 @@ endpoints:
     
 - name: Onyx
   plugin: onyx
-  enabled: true
+  enabled: false
   options:
   - option: IP Address
     value: 127.0.0.1
@@ -32,15 +36,14 @@ endpoints:
 # Configure Macros
 macros:
 - name: PP7 Example
-  enaled: true
+  enaled: false
   events:
   
-  - endpoint_name: iMac PP7
-    event_id: stage-display-changed
+  - endpoint: iMac PP7
+    event: stage-display-changed
     logic:
     
-    - function_name: For Hashtags
-      function_id: For Hashtags
+    - function: For Hashtags
       var: current_slide_notes
       logic:
       
@@ -78,24 +81,26 @@ macros:
             value: Capitalize
             
         - function: trigger
-          endpoint_name: Onyx
-          Trigger: Change Scene
+          endpoint: Onyx
+          trigger: Change Scene
           vars:
-          - Scene Name: "%Lighting Scene%"
+          - scene-name: "%Lighting Scene%"
           
 # Plugin Settings
-Plugins:
-- Plugin: pro-presenter
-  Enabled: true
-- Plugin: onyx
-  Enabled: true
-- Plugin: vmix
-  Enabled: false
-- Plugin: lanbox
-  Enabled: false
+plugins:
+- plugin: example-plugin
+  enabled: true
+- plugin: pro-presenter
+  enabled: false
+- plugin: onyx
+  enabled: false
+- plugin: vmix
+  enabled: false
+- plugin: lanbox
+  enabled: false
 
 # Server Settings
 # Use 0.0.0.0 to Bind all interfaces.
-Server:
-- IP Address: 0.0.0.0
-  Port: 2794
+server:
+- ip: 0.0.0.0
+  port: 2794

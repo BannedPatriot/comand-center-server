@@ -50,7 +50,7 @@ macros:
         logic:
 
         - function: Transform Variable
-        	operator: Replace
+          operator: Replace
           var: Current Hash
           to_var: Lighting Scene
           options:

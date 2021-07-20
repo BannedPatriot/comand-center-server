@@ -1,0 +1,101 @@
+# Configure Endpoints
+endpoints:
+- name: iMac PP7
+  plugin: pro-presenter
+  enabled: true
+  options:
+  - option: Version
+    value: Pro Presenter 7
+
+  - option: IP Address
+    value: 127.0.0.1
+    
+  - option: Port
+    value: 1111
+    
+  - option: Remote Password
+    value: secret
+    
+  - option: Stage Display Password
+    value: stage_secret
+    
+- name: Onyx
+  plugin: onyx
+  enabled: true
+  options:
+  - option: IP Address
+    value: 127.0.0.1
+    
+  - option: Port
+    value: 5555
+    
+# Configure Macros
+macros:
+- name: PP7 Example
+  enaled: true
+  events:
+  
+  - endpoint_name: iMac PP7
+    event_id: stage-display-changed
+    logic:
+    
+    - function_name: For Hashtags
+      function_id: For Hashtags
+      var: current_slide_notes
+      logic:
+      
+      - function: If Then
+        operator: Starts With
+        value: "#lights"
+        logic:
+
+        - function: Transform Variable
+        	operator: Replace
+          var: Current Hash
+          to_var: Lighting Scene
+          options:
+          - name: Replace
+            value: "#lights-"
+          - name: With
+            value: ''
+            
+        - function: Transform Variable
+          operator: Replace
+          var: Lighting Scene
+          to_var: Lighting Scene
+          options:
+          - name: Replace
+            value: "-"
+          - name: With
+            value: " "
+            
+        - function: Transform Variable
+          operator: Convert Case
+          var: Lighting Scene
+          to_var: Lighting Scene
+          options:
+          - name: Modifier
+            value: Capitalize
+            
+        - function: trigger
+          endpoint_name: Onyx
+          Trigger: Change Scene
+          vars:
+          - Scene Name: "%Lighting Scene%"
+          
+# Plugin Settings
+Plugins:
+- Plugin: pro-presenter
+  Enabled: true
+- Plugin: onyx
+  Enabled: true
+- Plugin: vmix
+  Enabled: false
+- Plugin: lanbox
+  Enabled: false
+
+# Server Settings
+# Use 0.0.0.0 to Bind all interfaces.
+Server:
+- IP Address: 0.0.0.0
+  Port: 2794

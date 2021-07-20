@@ -1,7 +1,5 @@
-if then
-regex
-for_hashs
-if_hash
-transform
-    .replace
-    
+If Then
+For Hashes
+    Produces Loop with new variable "Current Hash"
+Transform Variable
+    Replace

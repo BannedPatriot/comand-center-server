@@ -57,9 +57,6 @@ fn type_of<T>(_: &T) -> &'static str {
     std::any::type_name::<T>()
 }
 
-
-
-//////////////////////////////
 async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: SocketAddr, main_tx: SyncSender<String>) {
     main_tx.send(format!("Incoming TCP connection from: {}", &addr));
 
@@ -222,12 +219,8 @@ async fn main() -> Result<(), IoError> {
                 _ => {
                     println!("DEBUG :: Websocket API : {:?}", msg);
 
-                    // let broadcast_recipients = clients.clone().lock().iter()
-                    //     .map(|(_, ws_sink)| ws_sink);
-
                     let peers = clients.lock().unwrap();
                     let recipients = peers.iter().map(|(_, ws_sink)| ws_sink);
-
 
                         let message  = Message::Text(format!("I got you!  ::  {}", msg));
                         for recp in recipients.clone() {
@@ -267,7 +260,7 @@ fn kill_endpoint(endpoint_id: &String, endpoints: &Vec<Endpoint>, plugins: &Vec<
             if plugin.id == endpoint.plugin {
                 registrar.plugins[plugin.index].kill_endpoint(&endpoint);
             }
-    }
+        }
     }
 }
 

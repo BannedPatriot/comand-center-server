@@ -1,0 +1,7 @@
+if then
+regex
+for_hashs
+if_hash
+transform
+    .replace
+    

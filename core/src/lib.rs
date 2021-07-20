@@ -1,5 +1,7 @@
+extern crate derive_new;
 use std::vec::Vec;
-use std::sync::mpsc::{Sender};
+use std::sync::mpsc::{Sender,Receiver};
+use derive_new::new;
 
 #[derive(Debug)]
 pub struct Event {
@@ -29,12 +31,31 @@ pub struct TriggerVars {
     pub var_type: &'static str
 }
 
+#[derive(new, Debug)]
+pub struct PluginInfo {
+    #[new(default)]
+    pub name: &'static str,
+    #[new(default)]
+    pub id: &'static str,
+    #[new(default)]
+    pub index: usize
+}
+
+#[derive(Debug)]
+pub struct Endpoint {
+    pub id: String,
+    pub rx: Receiver<String>,
+    pub tx: Sender<String>,
+    pub plugin: &'static str
+}
+
 pub trait PluginRegistrar {
     fn register_plugin(&mut self, plugin: Box<dyn Plugin>);
 }
 
 pub trait Plugin {
     fn init(&self); // Log data about plugin
+    fn get_info(&self) -> PluginInfo;
 
     // fn get_options(&self); // get configuration options for endpoint
 
@@ -42,8 +63,8 @@ pub trait Plugin {
     //     comand center through their respective plugins. Plugins handle
     //     the logisticts of opening and mantinaing these connections.
     // */
-    fn init_endpoint(&self, main_tx: Sender<String>) -> Sender<String>; // bring up an endpoint
-    fn kill_endpoint(&self, endpoint: &Sender<String>); // terminate an endpoint
+    fn init_endpoint(&self, id: &String) -> Endpoint; // bring up an endpoint
+    fn kill_endpoint(&self, endpoint: &Endpoint); // terminate an endpoint
 
     fn get_events(&self) -> Vec<Event>; // get list of possible events to trigger macros
     fn get_triggers(&self) -> Vec<Trigger>; // get list of methords that can be triggered

@@ -16,10 +16,32 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+use futures_channel::mpsc::{unbounded, UnboundedSender};
+use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
+use tokio::net::{TcpListener, TcpStream};
+use tungstenite::protocol::Message;
 use libloading::Library;
-use core::{Plugin, PluginRegistrar};
-use std::env;
+use core::{Plugin, PluginRegistrar, PluginInfo, Endpoint};
+use std::sync::mpsc::{Sender, SyncSender, Receiver};
 use std::vec::Vec;
+
+use std::{
+    collections::HashMap,
+    env,
+    io::Error as IoError,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
+
+type Tx = UnboundedSender<Message>;
+type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
+
+#[derive(Debug, Clone)]
+pub struct Client {
+    pub user_id: usize,
+    pub topics: Vec<String>,
+    pub sender: String,
+}
 
 struct Registrar {
     plugins: Vec<Box<dyn Plugin>>,
@@ -31,7 +53,60 @@ impl PluginRegistrar for Registrar {
     }
 }
 
-fn main() {
+fn type_of<T>(_: &T) -> &'static str {
+    std::any::type_name::<T>()
+}
+
+
+
+//////////////////////////////
+async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: SocketAddr, main_tx: SyncSender<String>) {
+    main_tx.send(format!("Incoming TCP connection from: {}", &addr));
+
+    let ws_stream = tokio_tungstenite::accept_async(raw_stream)
+        .await
+        .expect("Error during the websocket handshake occurred");
+
+    main_tx.send(format!("WebSocket Client Connected: {}", &addr));
+
+    let (tx, rx) = unbounded();
+    peer_map.lock().unwrap().insert(addr, tx);
+
+    let (outgoing, incoming) = ws_stream.split();
+
+    let notify_main_loop = incoming.try_for_each(|msg| {
+
+        match msg.clone() {
+            Message::Text(msg) => {
+                main_tx.send(format!("Client {} Message: {}", &addr, &msg));
+            },
+            _ => {}
+        }
+
+        future::ok(())
+    });
+
+    let receive = rx.map(Ok).forward(outgoing);
+
+    pin_mut!(notify_main_loop, receive);
+    future::select(notify_main_loop, receive).await;
+
+    main_tx.send(format!("WebSocket Client Disconnected: {}", &addr));
+    peer_map.lock().unwrap().remove(&addr);
+}
+
+#[tokio::main]
+async fn main() -> Result<(), IoError> {
+    let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:4444".to_string());
+
+    let state = PeerMap::new(Mutex::new(HashMap::new()));
+
+    // Bind to socket
+    let try_socket = TcpListener::bind(&addr).await;
+    let listener = try_socket.expect("Failed to bind");
+    let clients = state.clone();
+    println!("Websocket Server Listening on: {}", addr);
+
     let mut registrar = Registrar {
         plugins: Vec::new(),
     };
@@ -70,13 +145,19 @@ fn main() {
 
     println!("# Loading Plugins\n");
     let mut not_first = false;
-    let plugins = registrar.plugins;
-
-    for plugin in &plugins {
+    let mut plugins = vec!();
+    
+    let mut n = 0;
+    for plugin in &registrar.plugins {
         if not_first {
             println!("");
         }
-        
+
+        let mut plugin_info = plugin.get_info();
+        plugin_info.index = n;
+        plugins.push(plugin_info);
+        n += 1;
+
         plugin.init();
 
         println!("\n  Events:");
@@ -95,20 +176,102 @@ fn main() {
             }
         }
 
-        plugin.trigger("clear-all", String::from("json"));
         not_first = true;
     }
 
-    let (main_tx, main_rx) = std::sync::mpsc::channel();
+    // TODO | Debugging
+    let mut endpoints: Vec<Endpoint> = vec!();
+    init_endpoint(&String::from("test_endpoint"), &mut endpoints, &plugins, &registrar);
+    kill_endpoint(&String::from("test_endpoint"), &endpoints, &plugins, &registrar);
 
-    let endpoint_test = plugins[0].init_endpoint(main_tx.clone());
-    
-    loop {
-        let msg = main_rx.try_recv();
-        if !msg.is_err() {
-            // Got msg, do something
-            println!("Log: {}", msg.unwrap());
+    // Start Websocket Server
+    let (tx_con_handler, conn_handler) = std::sync::mpsc::sync_channel(100);
+    tokio::spawn( async move {
+        while let Ok((stream, addr)) = listener.accept().await {
+            tokio::spawn(handle_connection(state.clone(), stream, addr, tx_con_handler.clone()));
         }
-        std::thread::sleep(std::time::Duration::from_millis(100));
+    });
+
+    // Main Loop
+    loop {
+        let mut i: usize = 0;
+        let mut remove_endpoints = false;
+        let mut endpoints_to_remove: Vec<usize> = vec!();
+
+        for endpoint in &endpoints {
+            let msg = endpoint.rx.try_recv();
+            if msg.is_ok() {
+                let msg = msg.unwrap();
+                match msg.as_str() {
+                    "_endpoint_opened_" =>{},
+                    "_endpoint_closed_" => {
+                        remove_endpoints = true;
+                        endpoints_to_remove.push(i);
+                    },
+                    _ => {
+                        println!("DEBUG :: {} :: {} : {:?}", endpoint.plugin, endpoint.id, msg);
+                    }
+                }
+            }
+        }
+
+        let msg = conn_handler.try_recv();
+        if msg.is_ok() {
+            let msg = msg.unwrap();
+            match msg.as_str() {
+                _ => {
+                    println!("DEBUG :: Websocket API : {:?}", msg);
+
+                    // let broadcast_recipients = clients.clone().lock().iter()
+                    //     .map(|(_, ws_sink)| ws_sink);
+
+                    let peers = clients.lock().unwrap();
+                    let recipients = peers.iter().map(|(_, ws_sink)| ws_sink);
+
+
+                        let message  = Message::Text(format!("I got you!  ::  {}", msg));
+                        for recp in recipients.clone() {
+                           recp.unbounded_send(message.clone()).unwrap()
+                        }
+
+                }
+            }
+        }
+
+        if remove_endpoints {
+            for i in endpoints_to_remove {
+                println!("Endpoint Removed: {}", endpoints[i].id);
+                endpoints.remove(i);
+            }
+            remove_endpoints = false;
+            endpoints_changed();
+        }
     }
+
+    Ok(())
+}
+
+fn init_endpoint(endpoint_id: &String, endpoints: &mut Vec<Endpoint>, plugins: &Vec<PluginInfo>, registrar: &Registrar) {
+    for plugin in plugins {
+        if plugin.id == "blank_plugin" {
+            endpoints.push(registrar.plugins[plugin.index].init_endpoint(&endpoint_id));
+            println!("Endpoint Added: {}", endpoint_id);
+            endpoints_changed();
+        }
+    }
+}
+
+fn kill_endpoint(endpoint_id: &String, endpoints: &Vec<Endpoint>, plugins: &Vec<PluginInfo>, registrar: &Registrar) {
+    for endpoint in endpoints {
+        for plugin in plugins {
+            if plugin.id == endpoint.plugin {
+                registrar.plugins[plugin.index].kill_endpoint(&endpoint);
+            }
+    }
+    }
+}
+
+// Function called after an endpoint is added or removed
+fn endpoints_changed() {
+    // TODO: Notify clients
 }

@@ -1,0 +1,33 @@
+{
+    "Event": 
+    
+        {
+            "type": "event",
+            "plugin": "pro_presenter",
+            "event": "stage_display_changed",
+            "vars": {
+                "current_slide_text": "",
+                "next_slide_text": "",
+                "current_slide_notes": "",
+                "next_slide_notes": ""
+            }
+        },
+
+
+    "Trigger": 
+    
+        {
+            "type": "trigger",
+            "trigger": "trigger_id",
+            "vars": {
+                "var1": "",
+                "var2": ""
+            }
+        },
+
+    "Status": 
+    
+        {
+            "status": "start/run/close"
+        }
+}

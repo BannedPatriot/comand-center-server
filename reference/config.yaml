@@ -1,6 +1,5 @@
 # Server Settings
 # Use 0.0.0.0 to Bind all interfaces.
-# Server Settings
 server:
   ip: 0.0.0.0
   port: 2794
@@ -21,7 +20,138 @@ endpoints:
     enabled: false
     ip: 127.0.0.1
     port: 5555
+
+# Macro Settings
+macros:
+  'PP7 Example':
+    enabled: true
+    events:
+      - stage_display_changed:
+        endpoint: iMac PP7
+        do:
+          - for: hashes
+            as: hash
+            in: stage_display_notes
+            do:
+              - if: hash
+                starts_with: lights
+                do:
+                  - set:
+                    scene: hash
+
+                  - replace: lights-
+                    with: ''
+                    in: scene
+
+                  - replace: '-'
+                    with: ' '
+                    in: scene
+
+                  - transform: scene
+                    case: caplitalize
+
+                  - trigger: change_lights
+                    endpoint: Onyx
+                    scene_name: scene
+
+                - set:
+                  endpoint: vMix
+                  output: 2
+                  value: 0.5
+
+                - match: hash
+                    song:
+                      - trigger: fade
+                        input: 16
+                        
+                    logo:
+                      - trigger: fade
+                        input: 12
+                      - trigger: change_lights
+                        endpoint: Onyx
+                        scene_name: Service
+
+
+                
+
+  'vMix Controller':
+    enabled: true
+    events:
+      - button_pressed:
+        endpoint: Switcher
+        do:
+          - if: button
+            is: H16
+            do:
+              - trigger: cut
+                endpoint: vMix
+                input: preview
+
+          - if: button
+            is: H17
+            do:
+              - trigger: fade
+                endpoint: vMix
+                input: preview
+                output: 2
+                value: 0.5 # 500ms fade
+
+          - if: button
+            is: H18
+            do:
+              - trigger: fade
+                endpoint: vMix
+                input: preview
+                value: 1 # 1s fade
+
+
+  'vMix Controller - Example 2':
+    enabled: true
+    events:
+      - button_pressed:
+        endpoint: Switcher
+        do:
+          - set:
+            endpoint: vMix
+            input: preview
+
+          - match: button
+            H16:
+              - trigger: cut
+            H17:
+              - trigger: fade
+                value: 0.5
+            H18:
+              - trigger: fade
+                value: 1
+            !default:
+              - Log: Button %button% is not configured.
           
+
+
+
+            is: H16
+            do:
+              - trigger: cut
+                endpoint: vMix
+                input: preview
+
+          - if: button
+            is: H17
+            do:
+              - trigger: fade
+                endpoint: vMix
+                input: preview
+                value: 0.5 # 500ms fade
+                
+          - if: button
+            is: H18
+            do:
+              - trigger: fade
+                endpoint: vMix
+                input: preview
+                value: 1 # 1s fade
+
 # Plugin Settings
 plugins:
   example-plugin:

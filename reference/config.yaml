@@ -1,106 +1,36 @@
-# Configure Endpoints
-endpoints:
-- name Example Endpoint
-  plugin: example-plugin
-  enabled: true
-
-- name: iMac PP7
-  Plugin: pro-presenter
-  enabled: false
-  options:
-  - option: Version
-    value: Pro Presenter 7
-
-  - option: IP Address
-    value: 127.0.0.1
-    
-  - option: Port
-    value: 1111
-    
-  - option: Remote Password
-    value: secret
-    
-  - option: Stage Display Password
-    value: stage_secret
-    
-- name: Onyx
-  plugin: onyx
-  enabled: false
-  options:
-  - option: IP Address
-    value: 127.0.0.1
-    
-  - option: Port
-    value: 5555
-    
-# Configure Macros
-macros:
-- name: PP7 Example
-  enaled: false
-  events:
+# Server Settings
+# Use 0.0.0.0 to Bind all interfaces.
+# Server Settings
+server:
+  ip: 0.0.0.0
+  port: 2794
   
-  - endpoint: iMac PP7
-    event: stage-display-changed
-    logic:
-    
-    - function: For Hashtags
-      var: current_slide_notes
-      logic:
-      
-      - function: If Then
-        operator: Starts With
-        value: "#lights"
-        logic:
+# Endpoint Settings
+endpoints:
+  'Pro Presenter 7':
+    plugin: pro-presenter
+    enabled: true
+    version: 7
+    ip: 127.0.0.1
+    port: 4444
+    password: secret
+    stage_password: stage secret
 
-        - function: Transform Variable
-          operator: Replace
-          var: Current Hash
-          to_var: Lighting Scene
-          options:
-          - name: Replace
-            value: "#lights-"
-          - name: With
-            value: ''
-            
-        - function: Transform Variable
-          operator: Replace
-          var: Lighting Scene
-          to_var: Lighting Scene
-          options:
-          - name: Replace
-            value: "-"
-          - name: With
-            value: " "
-            
-        - function: Transform Variable
-          operator: Convert Case
-          var: Lighting Scene
-          to_var: Lighting Scene
-          options:
-          - name: Modifier
-            value: Capitalize
-            
-        - function: trigger
-          endpoint: Onyx
-          trigger: Change Scene
-          vars:
-          - scene-name: "%Lighting Scene%"
+  'Onyx':
+    plugin: onyx
+    enabled: false
+    ip: 127.0.0.1
+    port: 5555
           
 # Plugin Settings
 plugins:
-- plugin: example-plugin
-  enabled: true
-- plugin: pro-presenter
-  enabled: false
-- plugin: onyx
-  enabled: false
-- plugin: vmix
-  enabled: false
-- plugin: lanbox
-  enabled: false
-
-# Server Settings
-# Use 0.0.0.0 to Bind all interfaces.
-server:
-- ip: 0.0.0.0
-  port: 2794
+  example-plugin:
+    enbaled: true
+  pro-presenter:
+    enabled: true
+  onyx:
+    enabled: true
+  vmix:
+    enabled: true
+  lanbox:
+    enabled: true

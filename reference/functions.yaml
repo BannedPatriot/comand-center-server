@@ -58,17 +58,17 @@
 
 # Run Python code. Python must be installed on your server.
 # All Python libraries, including 3rd party ones, are exposed.
-# Comand Center variables are exposed via an object called: ccs
+# Comand Center variables are exposed via an object called: cc
 
-# Get a variable:       variable = ccs.get('variable')
-# Get all variables:    dictionary = ccs.get_all()
-# Set a variable:       ccs.set('variable', 'value')
-# Set from dictionary:  ccs.set(dictionary)
+# Get a variable:       variable = cc.get('variable')
+# Get all variables:    dictionary = cc.get_all()
+# Set a variable:       cc.set('variable', 'value')
+# Set from dictionary:  cc.set(dictionary)
 
 - python: | # Pipe is required here.
     # Inline python code block.
     import random
-    ccs.set('random_num', random.randint(0,9))
+    cc.set('random_num', random.randint(0,9))
   
   
 

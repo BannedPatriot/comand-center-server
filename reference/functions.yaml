@@ -1,0 +1,82 @@
+# Functions supported by Comand Center Server.
+
+# Search variable for hashtags and loop through them
+- for_hashes: # Variable to operate on
+  as: # Temporary variable name
+  do: # Do something
+
+# if: do: or:
+- if: # Variable to operate on
+  is: # Exact Match
+  starts_with: # Matches start of variable. Shorthand: starts
+  ends_with: # Matches end of variable. Shorthand: ends
+  regex: # Regular Expression to match
+
+  greater_than: # Greater than value
+  gt: # Shorthand for greater_than
+
+  less_than: # Less than value
+  lt: # Shorthand for less_than
+
+  greater_than_eq: # Greater than or equal to value
+  gte: # Shorthand for greater_than_eq
+
+  less_than_eq: # Less than or equal to value
+  lte: # Shorthand for less_than_eq
+
+  do: # match successful, do something
+  or: # no match, do something
+
+# Set variables
+- set:
+  variable: value # Set variable = value
+
+# Replace matched string in variable
+- replace: # string to match
+  with: # replace it with this
+  in: # variable to operate on
+
+# Transform Variable
+- transform: # variable to operate on
+  case: # Options: capitalize, lowwercase, uppercase
+
+# Match
+- match: # variable to operate on
+  value: # value = value to match
+  !regex'regex string': # Match with a regular expression
+    # variable matched value, do something
+  !default:
+    # no match, do something
+
+# Emit a trigger. Each trigger has a subset of variables they understand.
+# See documentation for the plugin exposing the trigger.
+- trigger: trigger-name # Emit trigger with trigger-name
+  endpoint: # Endpoint to send trigger event
+  [other_variables]
+
+
+
+# Run Python code. Python must be installed on your server.
+# All Python libraries, including 3rd party ones, are exposed.
+# Comand Center variables are exposed via an object called: ccs
+
+# Get a variable:       variable = ccs.get('variable')
+# Get all variables:    dictionary = ccs.get_all()
+# Set a variable:       ccs.set('variable', 'value')
+# Set from dictionary:  ccs.set(dictionary)
+
+- python: | # Pipe is required here.
+    # Inline python code block.
+    import random
+    ccs.set('random_num', random.randint(0,9))
+  
+  
+
+
+
+
+
+
+  
+
+

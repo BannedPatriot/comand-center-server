@@ -1,5 +1,0 @@
-If Then
-For Hashes
-    Produces Loop with new variable "Current Hash"
-Transform Variable
-    Replace

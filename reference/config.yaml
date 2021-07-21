@@ -59,17 +59,17 @@ macros:
                     output: 2
                     value: 0.5
 
-                  - match: hash
-                      song:
-                        - trigger: fade
-                          input: 16
+              - match: hash
+                  song:
+                    - trigger: fade
+                      input: 16
 
-                      logo:
-                        - trigger: fade
-                          input: 12
-                        - trigger: change_lights
-                          endpoint: Onyx
-                          scene_name: Service
+                  logo:
+                    - trigger: fade
+                      input: 12
+                    - trigger: change_lights
+                      endpoint: Onyx
+                      scene_name: Service
 
 
                 

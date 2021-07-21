@@ -54,10 +54,10 @@ macros:
                     endpoint: Onyx
                     scene_name: scene
 
-                  - set:
-                    endpoint: vMix
-                    output: 2
-                    value: 0.5
+              - set:
+                  endpoint: vMix
+                  output: 2
+                  value: 0.5
 
               - match: hash
                   song:

@@ -1,11 +1,13 @@
-# Functions supported by Comand Center Server.
+### Functions supported by Comand Center Server.
 
-# Search variable for hashtags and loop through them
+
+### Search variable for hashtags and loop through them
 - for_hashes: # Variable to operate on
   as: # Temporary variable name
   do: # Do something
 
-# if: do: or:
+
+### if: do: or:
 - if: # Variable to operate on
   is: # Exact Match
   starts_with: # Matches start of variable. Shorthand: starts
@@ -27,20 +29,24 @@
   do: # match successful, do something
   or: # no match, do something
 
-# Set variables
+
+### Set variables
 - set:
   variable: value # Set variable = value
 
-# Replace matched string in variable
+
+### Replace matched string in variable
 - replace: # string to match
   with: # replace it with this
   in: # variable to operate on
 
-# Transform Variable
+
+### Transform Variable
 - transform: # variable to operate on
   case: # Options: capitalize, lowwercase, uppercase
 
-# Match
+
+### Match
 - match: # variable to operate on
   value: # value = value to match
   !regex'regex string': # Match with a regular expression
@@ -48,22 +54,22 @@
   !default:
     # no match, do something
 
-# Emit a trigger. Each trigger has a subset of variables they understand.
-# See documentation for the plugin exposing the trigger.
+
+### Emit a trigger. Each trigger has a subset of variables they understand.
+### See documentation for the plugin exposing the trigger.
 - trigger: trigger-name # Emit trigger with trigger-name
   endpoint: # Endpoint to send trigger event
   [other_variables]
 
 
+### Run Python code. Python must be installed on your server.
+### All Python libraries, including 3rd party ones, are exposed.
+### Comand Center variables are exposed via an object called: cc
 
-# Run Python code. Python must be installed on your server.
-# All Python libraries, including 3rd party ones, are exposed.
-# Comand Center variables are exposed via an object called: cc
-
-# Get a variable:       variable = cc.get('variable')
-# Get all variables:    dictionary = cc.get_all()
-# Set a variable:       cc.set('variable', 'value')
-# Set from dictionary:  cc.set(dictionary)
+### Get a variable:       variable = cc.get('variable')
+### Get all variables:    dictionary = cc.get_all()
+### Set a variable:       cc.set('variable', 'value')
+### Set from dictionary:  cc.set(dictionary)
 
 - python: | # Pipe is required here.
     # Inline python code block.

@@ -60,16 +60,16 @@ macros:
                   value: 0.5
 
               - match: hash
-                  song:
-                    - trigger: fade
-                      input: 16
+                song:
+                  - trigger: fade
+                    input: 16
 
-                  logo:
-                    - trigger: fade
-                      input: 12
-                    - trigger: change_lights
-                      endpoint: Onyx
-                      scene_name: Service
+                logo:
+                  - trigger: fade
+                    input: 12
+                  - trigger: change_lights
+                    endpoint: Onyx
+                    scene_name: Service
 
 
                 
@@ -124,7 +124,7 @@ macros:
             H18:
               - trigger: fade
                 value: 1
-            !default:
+            _default:
               - Log: Button %button% is not configured.
           
 

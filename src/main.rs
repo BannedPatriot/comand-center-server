@@ -15,15 +15,25 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+extern crate yaml_rust;
+use serde::__private::de::borrow_cow_bytes;
+use yaml_rust::{YamlLoader, YamlEmitter};
+use yaml_rust::Yaml;
+use linked_hash_map::LinkedHashMap;
 
 use futures_channel::mpsc::{unbounded, UnboundedSender};
 use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
 use tokio::net::{TcpListener, TcpStream};
 use tungstenite::protocol::Message;
 use libloading::Library;
-use core::{Plugin, PluginRegistrar, PluginInfo, Endpoint};
+use core::*;
+use std::borrow::BorrowMut;
+use std::hash::Hash;
 use std::sync::mpsc::{Sender, SyncSender, Receiver};
 use std::vec::Vec;
+use std::fs::File;
+use std::io::prelude::*;
+
 
 use std::{
     collections::HashMap,
@@ -92,8 +102,54 @@ async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: Socke
     peer_map.lock().unwrap().remove(&addr);
 }
 
+struct AppRuntime {
+    config: Yaml,
+    endpoints: Vec<Endpoint>,
+    registrar: Registrar,
+    plugins: Vec<PluginInfo>
+}
+
+
+
 #[tokio::main]
 async fn main() -> Result<(), IoError> {
+
+    // Read Config File
+    let mut file = File::open("config.yaml").unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents);
+
+    // Get Mutable 'endpoints'
+    let mut docs = YamlLoader::load_from_str(&contents).unwrap();
+    let mut config = docs[0].to_owned();
+
+    let mut app_runtime = AppRuntime {
+        config: config,
+        endpoints: vec!(),
+        registrar:  Registrar { plugins: vec!() },
+        plugins: vec!(),
+    };
+
+
+
+
+    // if let Yaml::Hash(hash_map) = config {
+    //     if let Yaml::Array(endpoints) = hash_map[&Yaml::from_str("endpoints")].borrow_mut() {
+    //         for endpoint in endpoints.iter_mut() {
+    //             if let Yaml::Hash(endpoint) = endpoint.borrow_mut() {
+    //                 if endpoint[&Yaml::from_str("name")] == Yaml::from_str("Current Name") {
+    //                     endpoint.insert(Yaml::from_str("name"), Yaml::from_str("New Name"));
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    // let yaml = serde_yaml::to_string(&config);
+    // let mut file = File::create("config.yaml")?;
+    // file.write_all(&yaml.unwrap().as_bytes())?;
+
+
     let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:4444".to_string());
 
     let state = PeerMap::new(Mutex::new(HashMap::new()));
@@ -103,10 +159,6 @@ async fn main() -> Result<(), IoError> {
     let listener = try_socket.expect("Failed to bind");
     let clients = state.clone();
     println!("Websocket Server Listening on: {}", addr);
-
-    let mut registrar = Registrar {
-        plugins: Vec::new(),
-    };
 
     let cwd = env::current_dir().unwrap().as_os_str().to_str().unwrap().to_string();
     #[cfg(debug_assertions)]
@@ -129,12 +181,11 @@ async fn main() -> Result<(), IoError> {
     for file in files {
         if file.ends_with(".so") {
             println!("Found Plugin: {}", file);
-            let lib = Box::leak(Box::new(Library::new(file).unwrap()));
-
             unsafe {
+                let lib = Box::leak(Box::new(Library::new(file).unwrap()));
                 let func: libloading::Symbol<unsafe extern "C" fn(&mut dyn PluginRegistrar) -> ()> =
                     lib.get(b"plugin_entry").unwrap();
-                func(&mut registrar);
+                func(&mut app_runtime.registrar);
             }
         }
         
@@ -142,17 +193,16 @@ async fn main() -> Result<(), IoError> {
 
     println!("# Loading Plugins\n");
     let mut not_first = false;
-    let mut plugins = vec!();
     
     let mut n = 0;
-    for plugin in &registrar.plugins {
+    for plugin in &app_runtime.registrar.plugins {
         if not_first {
             println!("");
         }
 
         let mut plugin_info = plugin.get_info();
         plugin_info.index = n;
-        plugins.push(plugin_info);
+        app_runtime.plugins.push(plugin_info);
         n += 1;
 
         plugin.init();
@@ -177,9 +227,8 @@ async fn main() -> Result<(), IoError> {
     }
 
     // TODO | Debugging
-    let mut endpoints: Vec<Endpoint> = vec!();
-    init_endpoint(&String::from("test_endpoint"), &mut endpoints, &plugins, &registrar);
-    kill_endpoint(&String::from("test_endpoint"), &endpoints, &plugins, &registrar);
+    init_endpoint(&mut app_runtime, &String::from("test_endpoint"));
+    kill_endpoint(&mut app_runtime, &String::from("test_endpoint"));
 
     // Start Websocket Server
     let (tx_con_handler, conn_handler) = std::sync::mpsc::sync_channel(100);
@@ -195,7 +244,7 @@ async fn main() -> Result<(), IoError> {
         let mut remove_endpoints = false;
         let mut endpoints_to_remove: Vec<usize> = vec!();
 
-        for endpoint in &endpoints {
+        for endpoint in &app_runtime.endpoints {
             let msg = endpoint.rx.try_recv();
             if msg.is_ok() {
                 let msg = msg.unwrap();
@@ -233,32 +282,36 @@ async fn main() -> Result<(), IoError> {
 
         if remove_endpoints {
             for i in endpoints_to_remove {
-                println!("Endpoint Removed: {}", endpoints[i].id);
-                endpoints.remove(i);
+                println!("Endpoint Removed: {}", app_runtime.endpoints[i].id);
+                app_runtime.endpoints.remove(i);
             }
             remove_endpoints = false;
             endpoints_changed();
         }
     }
 
+    
+
     Ok(())
 }
 
-fn init_endpoint(endpoint_id: &String, endpoints: &mut Vec<Endpoint>, plugins: &Vec<PluginInfo>, registrar: &Registrar) {
-    for plugin in plugins {
-        if plugin.id == "blank_plugin" {
-            endpoints.push(registrar.plugins[plugin.index].init_endpoint(&endpoint_id));
+
+fn init_endpoint(app_runtime: &mut AppRuntime, endpoint_id: &String) {
+    for plugin in &app_runtime.plugins {
+        if plugin.id == "example-plugin" {
+
+            app_runtime.endpoints.push(app_runtime.registrar.plugins[plugin.index].init_endpoint(&endpoint_id));
             println!("Endpoint Added: {}", endpoint_id);
             endpoints_changed();
         }
     }
 }
 
-fn kill_endpoint(endpoint_id: &String, endpoints: &Vec<Endpoint>, plugins: &Vec<PluginInfo>, registrar: &Registrar) {
-    for endpoint in endpoints {
-        for plugin in plugins {
+fn kill_endpoint(app_runtime: &AppRuntime, endpoint_id: &String) {
+    for endpoint in &app_runtime.endpoints {
+        for plugin in &app_runtime.plugins {
             if plugin.id == endpoint.plugin {
-                registrar.plugins[plugin.index].kill_endpoint(&endpoint);
+                app_runtime.registrar.plugins[plugin.index].kill_endpoint(&endpoint);
             }
         }
     }
@@ -268,3 +321,8 @@ fn kill_endpoint(endpoint_id: &String, endpoints: &Vec<Endpoint>, plugins: &Vec<
 fn endpoints_changed() {
     // TODO: Notify clients
 }
+
+
+
+
+

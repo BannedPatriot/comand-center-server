@@ -1,5 +1,5 @@
 [package]
-name = "_blank_plugin"
+name = "example-plugin"
 version = "0.1.0"
 authors = ["Banned Patriot <realbannedpatriot@protonmail.com>"]
 edition = "2018"

@@ -6,19 +6,22 @@ edition = "2018"
 
 [dependencies]
 core = { path = "core" }
+yaml-rust = "0.4.5"
 
-libloading = "0.5.2"
+libloading = "0.7.0"
 derive_builder = "*"
 tokio = { version = "*", features = ["full"] }
 tokio-tungstenite = "*"
 tungstenite = "*"
 futures-util = "*"
 futures-channel = "*"
+linked-hash-map = "0.5.4"
 
-serde = "*"
+serde = { version = "*", features = ["derive"] }
+serde_yaml = "*"
 serde_json = "*"
-serde_derive = "*"
+
 
 
 [workspace]
-members = ["plugins/blank_plugin"]
+members = ["plugins/example-plugin"]

@@ -2,16 +2,66 @@ extern crate derive_new;
 use std::vec::Vec;
 use std::sync::mpsc::{Sender,Receiver};
 use derive_new::new;
+use serde::{Serialize, Deserialize};
+
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct AppConfig {
+    pub endpoints: Vec<ConfigEndpoint>,
+    pub macros: Vec<ConfigMacro>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigEndpoint {
+    pub name: String,
+    pub plugin: String,
+    pub enabled: bool,
+    pub options: Vec<ConfigOptions>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigOptions {
+    pub option: String,
+    pub value: String
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigMacro {
+    pub name: String,
+    pub enabled: bool,
+    pub events: Vec<ConfigMacroEvent>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigMacroEvent {
+    pub endpoint: String,
+    pub event: String,
+    pub logic: Vec<ConfigMacroFunction>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigMacroFunction {
+    pub function: String,
+    pub options: Vec<ConfigMacroFunctionOptions>,
+    pub logic: Vec<ConfigMacroFunction>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigMacroFunctionOptions {
+    pub option: String,
+    pub value: String
+}
+
 
 #[derive(Debug)]
 pub struct Event {
     pub name: &'static str,
     pub id: &'static str,
-    pub vars: Vec<EventVars>
+    pub vars: Vec<EventVar>
 }
 
 #[derive(Debug)]
-pub struct EventVars {
+pub struct EventVar {
     pub var_name: &'static str,
     pub var_id: &'static str,
     pub var_type: &'static str
@@ -21,24 +71,31 @@ pub struct EventVars {
 pub struct Trigger {
     pub name: &'static str,
     pub id: &'static str,
-    pub vars: Vec<TriggerVars>
+    pub vars: Vec<TriggerVar>
 }
 
 #[derive(Debug)]
-pub struct TriggerVars {
+pub struct TriggerVar {
     pub var_name: &'static str,
     pub var_id: &'static str,
     pub var_type: &'static str
 }
 
-#[derive(new, Debug)]
+#[derive(Clone, Debug)]
 pub struct PluginInfo {
-    #[new(default)]
+    pub index: usize,
     pub name: &'static str,
-    #[new(default)]
     pub id: &'static str,
-    #[new(default)]
-    pub index: usize
+    pub version: &'static str,
+    pub options: Vec<PluginOption>
+}
+
+#[derive(Clone, Debug)]
+pub struct PluginOption {
+    pub name: &'static str,
+    pub option_type: &'static str,
+    pub option_list: Vec<&'static str>,
+    pub option_default: &'static str,
 }
 
 #[derive(Debug)]
